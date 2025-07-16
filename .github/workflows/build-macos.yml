@@ -1,4 +1,4 @@
-name: Build macOS App (Universal Fix v2)
+name: Build macOS App (Universal with Qt Build)
 
 on:
   push:
@@ -18,17 +18,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      # ИЗМЕНЕНИЕ ЗДЕСЬ: Добавляем PyQt5 в список для принудительной сборки
+      # НОВЫЙ ШАГ: Устанавливаем инструменты для сборки Qt
+      - name: Install Qt5 development tools
+        run: brew install qt@5
+
       - name: Install dependencies (with universal CFFI & PyQt5 fix)
         env:
           ARCHFLAGS: "-arch arm64 -arch x86_64"
         run: |
           python -m pip install --upgrade pip
-          # Теперь мы говорим pip НЕ использовать готовые бинарники для cffi И PyQt5
-          pip install --no-binary cffi,PyQt5 -r requirements.txt
+          # Говорим pip не использовать готовые бинарники
+          pip install --no-binary :all: -r requirements.txt
           pip install pyinstaller
 
-      # Собираем в отладочном режиме универсальное приложение
       - name: Build CONSOLE .app with PyInstaller
         run: |
           pyinstaller --name "tldv-extract" \
