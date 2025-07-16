@@ -1,0 +1,17 @@
+Index: app.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app.py b/app.py
+--- a/app.py	
++++ b/app.py	(date 1738935374992)
+@@ -7,7 +7,7 @@
+ 
+ nltk.download('punkt')
+ nltk.download('stopwords')
+-nltk.download('punkt_tab') # Добавили загрузку punkt_tab    
++nltk.download('punkt_tab') # Добавили загрузку punkt_tab
+ 
+ app = Flask(__name__)
+ 
