@@ -1,4 +1,4 @@
-name: Build macOS App (Debug Mode)
+name: Build macOS App (Universal Fix)
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
 
 jobs:
   build:
-    # Собираем на Intel, это наш самый надежный вариант
-    runs-on: macos-13
+    # Возвращаемся на быстрый и доступный runner
+    runs-on: macos-latest
 
     steps:
       - name: Checkout code
@@ -19,24 +19,30 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      # ГЛАВНОЕ ИЗМЕНЕНИЕ ЗДЕСЬ
+      - name: Install dependencies (with universal CFFI fix)
+        env:
+          # Говорим компилятору создавать универсальные бинарники
+          ARCHFLAGS: "-arch arm64 -arch x86_64"
         run: |
           python -m pip install --upgrade pip
+          # Говорим pip НЕ скачивать готовый cffi, а собрать его с нуля
+          pip install --no-binary cffi cffi
+          # Теперь устанавливаем все остальное
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # ГЛАВНОЕ ИЗМЕНЕНИЕ: Собираем без флага --windowed
+      # Собираем в отладочном режиме (без --windowed), чтобы видеть ошибки
       - name: Build CONSOLE .app with PyInstaller
         run: |
           pyinstaller --name "tldv-extract" \
                       --onefile \
                       --add-data "templates:templates" \
+                      --target-arch universal2 \
                       app.py
 
-      # Мы не будем создавать .dmg, чтобы упростить процесс.
-      # Мы просто запакуем .app в zip-архив.
       - name: Upload .app artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macOS-App-Debug
+          name: macOS-App-Universal-Debug
           path: dist/tldv-extract.app
