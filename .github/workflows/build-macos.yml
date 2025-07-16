@@ -10,21 +10,25 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      # 1. Клонируем код
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Настраиваем Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # 3. Устанавливаем зависимости
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build with PyInstaller
+      # 4. Собираем .app приложение
+      - name: Build .app with PyInstaller
         run: |
           pyinstaller --name "tldv-extract" \
                       --onefile \
@@ -32,8 +36,27 @@ jobs:
                       --add-data "templates:templates" \
                       app.py
 
-      - name: Upload artifact
+      # 5. НОВЫЙ ШАГ: Создаем .dmg установщик
+      - name: Create DMG Installer
+        run: |
+          # Устанавливаем утилиту для создания DMG
+          brew install create-dmg
+          
+          # Создаем сам DMG файл
+          create-dmg \
+            --volname "tldv-extract Installer" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --icon "tldv-extract.app" 200 190 \
+            --hide-extension "tldv-extract.app" \
+            --app-drop-link 600 185 \
+            "dist/tldv-extract.dmg" \
+            "dist/tldv-extract.app"
+
+      # 6. ИЗМЕНЕННЫЙ ШАГ: Загружаем готовый .dmg
+      - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macOS-App
-          path: dist/tldv-extract.app
+          name: macOS-Installer
+          path: dist/tldv-extract.dmg # Теперь ищем и загружаем .dmg файл
