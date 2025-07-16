@@ -27,13 +27,14 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # 4. Собираем .app приложение
-      - name: Build .app with PyInstaller
+      # 4. Собираем универсальное .app приложение
+      - name: Build universal .app with PyInstaller
         run: |
           pyinstaller --name "tldv-extract" \
                       --onefile \
                       --windowed \
                       --add-data "templates:templates" \
+                      --target-arch=universal2 \
                       app.py
 
       # 5. НОВЫЙ ШАГ: Создаем .dmg установщик
