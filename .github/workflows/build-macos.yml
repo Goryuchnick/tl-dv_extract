@@ -1,4 +1,4 @@
-name: Build macOS App for Intel (on Intel Runner)
+name: Build macOS App (Debug Mode)
 
 on:
   push:
@@ -7,55 +7,36 @@ on:
 
 jobs:
   build:
-    # КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Используем современный Intel runner, который должен быть доступен.
+    # Собираем на Intel, это наш самый надежный вариант
     runs-on: macos-13
 
     steps:
-      # 1. Клонируем код
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Настраиваем Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 3. Устанавливаем зависимости (теперь они будут правильной архитектуры)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # 4. Собираем .app приложение (без указания архитектуры!)
-      - name: Build .app with PyInstaller
+      # ГЛАВНОЕ ИЗМЕНЕНИЕ: Собираем без флага --windowed
+      - name: Build CONSOLE .app with PyInstaller
         run: |
-          # Флаг --target-arch не нужен. PyInstaller сам определит, что машина - Intel.
           pyinstaller --name "tldv-extract" \
                       --onefile \
-                      --windowed \
                       --add-data "templates:templates" \
                       app.py
 
-      # 5. Создаем .dmg установщик
-      - name: Create DMG Installer
-        run: |
-          brew install create-dmg
-          create-dmg \
-            --volname "tldv-extract Installer" \
-            --window-pos 200 120 \
-            --window-size 800 400 \
-            --icon-size 100 \
-            --icon "tldv-extract.app" 200 190 \
-            --hide-extension "tldv-extract.app" \
-            --app-drop-link 600 185 \
-            "dist/tldv-extract.dmg" \
-            "dist/tldv-extract.app"
-
-      # 6. Загружаем готовый .dmg
-      - name: Upload DMG artifact
+      # Мы не будем создавать .dmg, чтобы упростить процесс.
+      # Мы просто запакуем .app в zip-архив.
+      - name: Upload .app artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macOS-Intel-Installer
-          path: dist/tldv-extract.dmg
+          name: macOS-App-Debug
+          path: dist/tldv-extract.app
