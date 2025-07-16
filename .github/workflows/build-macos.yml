@@ -1,4 +1,4 @@
-name: Build macOS App for Intel (x86_64)
+name: Build macOS App for Intel (on Intel Runner)
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
 
 jobs:
   build:
-    # ИЗМЕНЕНИЕ 1: Возвращаем современный, быстрый runner, который всегда доступен.
-    runs-on: macos-latest
+    # КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Используем современный Intel runner, который должен быть доступен.
+    runs-on: macos-13
 
     steps:
       # 1. Клонируем код
@@ -21,23 +21,21 @@ jobs:
         with:
           python-version: '3.11'
 
-      # 3. Устанавливаем зависимости
+      # 3. Устанавливаем зависимости (теперь они будут правильной архитектуры)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # 4. Собираем .app приложение
-      - name: Build .app with PyInstaller for Intel
+      # 4. Собираем .app приложение (без указания архитектуры!)
+      - name: Build .app with PyInstaller
         run: |
-          # ИЗМЕНЕНИЕ 2: Четко указываем цель - Intel (x86_64).
-          # Это решит проблему "не поддерживается на этом компьютере".
+          # Флаг --target-arch не нужен. PyInstaller сам определит, что машина - Intel.
           pyinstaller --name "tldv-extract" \
                       --onefile \
                       --windowed \
                       --add-data "templates:templates" \
-                      --target-arch x86_64 \
                       app.py
 
       # 5. Создаем .dmg установщик
