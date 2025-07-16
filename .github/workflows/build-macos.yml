@@ -1,4 +1,4 @@
-name: Build macOS App (Universal with Qt Build)
+name: Build macOS App (Final Universal Build)
 
 on:
   push:
@@ -18,17 +18,18 @@ jobs:
         with:
           python-version: '3.11'
 
-      # НОВЫЙ ШАГ: Устанавливаем инструменты для сборки Qt
+      # Шаг 1: Устанавливаем инструменты для сборки Qt. Это правильно и нужно.
       - name: Install Qt5 development tools
         run: brew install qt@5
 
-      - name: Install dependencies (with universal CFFI & PyQt5 fix)
+      # Шаг 2: Устанавливаем зависимости, но теперь более умным способом
+      - name: Install dependencies (Targeted universal fix)
         env:
           ARCHFLAGS: "-arch arm64 -arch x86_64"
         run: |
           python -m pip install --upgrade pip
-          # Говорим pip не использовать готовые бинарники
-          pip install --no-binary :all: -r requirements.txt
+          # КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Говорим pip собирать с нуля ТОЛЬКО cffi и PyQt5.
+          pip install --no-binary cffi,PyQt5 -r requirements.txt
           pip install pyinstaller
 
       - name: Build CONSOLE .app with PyInstaller
