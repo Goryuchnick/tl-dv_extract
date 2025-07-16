@@ -1,4 +1,4 @@
-name: Build macOS App
+name: Build macOS App for Intel
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    # ИЗМЕНЕНИЕ 1: Используем виртуальную машину с Intel
+    runs-on: macos-12
 
     steps:
       # 1. Клонируем код
@@ -20,32 +21,27 @@ jobs:
         with:
           python-version: '3.11'
 
-      # 3. Устанавливаем УНИВЕРСАЛЬНЫЕ зависимости
-      - name: Install universal dependencies
-        env:
-          ARCHFLAGS: "-arch arm64 -arch x86_64"
+      # 3. Устанавливаем зависимости
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
-      # 4. Собираем универсальное .app приложение
-      - name: Build universal .app with PyInstaller
+      # 4. Собираем .app приложение
+      - name: Build .app with PyInstaller
         run: |
+          # ИЗМЕНЕНИЕ 2: Убрали флаг --target-arch=universal2
           pyinstaller --name "tldv-extract" \
                       --onefile \
                       --windowed \
                       --add-data "templates:templates" \
-                      --target-arch=universal2 \
                       app.py
 
-      # 5. НОВЫЙ ШАГ: Создаем .dmg установщик
+      # 5. Создаем .dmg установщик
       - name: Create DMG Installer
         run: |
-          # Устанавливаем утилиту для создания DMG
           brew install create-dmg
-          
-          # Создаем сам DMG файл
           create-dmg \
             --volname "tldv-extract Installer" \
             --window-pos 200 120 \
@@ -57,9 +53,9 @@ jobs:
             "dist/tldv-extract.dmg" \
             "dist/tldv-extract.app"
 
-      # 6. ИЗМЕНЕННЫЙ ШАГ: Загружаем готовый .dmg
+      # 6. Загружаем готовый .dmg
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macOS-Installer
-          path: dist/tldv-extract.dmg # Теперь ищем и загружаем .dmg файл
+          name: macOS-Intel-Installer
+          path: dist/tldv-extract.dmg
