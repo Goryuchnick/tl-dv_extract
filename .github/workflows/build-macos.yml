@@ -1,4 +1,4 @@
-name: Build macOS App (Final Universal Build)
+name: Build macOS App (Final Universal Build with PATH fix)
 
 on:
   push:
@@ -18,20 +18,24 @@ jobs:
         with:
           python-version: '3.11'
 
-      # Шаг 1: Устанавливаем инструменты для сборки Qt. Это правильно и нужно.
+      # Шаг 1: Устанавливаем инструменты для сборки Qt
       - name: Install Qt5 development tools
         run: brew install qt@5
 
-      # Шаг 2: Устанавливаем зависимости, но теперь более умным способом
+      # НОВЫЙ И САМЫЙ ВАЖНЫЙ ШАГ
+      - name: Add Qt to PATH
+        run: echo "$(brew --prefix qt@5)/bin" >> $GITHUB_PATH
+
+      # Шаг 3: Устанавливаем зависимости, которые теперь найдут Qt
       - name: Install dependencies (Targeted universal fix)
         env:
           ARCHFLAGS: "-arch arm64 -arch x86_64"
         run: |
           python -m pip install --upgrade pip
-          # КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Говорим pip собирать с нуля ТОЛЬКО cffi и PyQt5.
           pip install --no-binary cffi,PyQt5 -r requirements.txt
           pip install pyinstaller
 
+      # Последующие шаги остаются без изменений
       - name: Build CONSOLE .app with PyInstaller
         run: |
           pyinstaller --name "tldv-extract" \
