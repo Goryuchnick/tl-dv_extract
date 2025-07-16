@@ -1,4 +1,4 @@
-name: Build macOS App for Intel
+name: Build macOS App for Intel (x86_64)
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
 
 jobs:
   build:
-    # ИЗМЕНЕНИЕ 1: Используем виртуальную машину с Intel
-    runs-on: macos-12
+    # ИЗМЕНЕНИЕ 1: Возвращаем современный, быстрый runner, который всегда доступен.
+    runs-on: macos-latest
 
     steps:
       # 1. Клонируем код
@@ -29,13 +29,15 @@ jobs:
           pip install pyinstaller
 
       # 4. Собираем .app приложение
-      - name: Build .app with PyInstaller
+      - name: Build .app with PyInstaller for Intel
         run: |
-          # ИЗМЕНЕНИЕ 2: Убрали флаг --target-arch=universal2
+          # ИЗМЕНЕНИЕ 2: Четко указываем цель - Intel (x86_64).
+          # Это решит проблему "не поддерживается на этом компьютере".
           pyinstaller --name "tldv-extract" \
                       --onefile \
                       --windowed \
                       --add-data "templates:templates" \
+                      --target-arch x86_64 \
                       app.py
 
       # 5. Создаем .dmg установщик
